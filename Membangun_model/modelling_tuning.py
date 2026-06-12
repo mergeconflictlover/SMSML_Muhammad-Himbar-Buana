@@ -108,8 +108,19 @@ def run_tuning():
         mlflow.log_metric("recall", rec)
         mlflow.log_metric("f1_score", f1)
         
-        # Log model scikit-learn secara manual
-        mlflow.sklearn.log_model(best_model, "model")
+        # Save model secara lokal terlebih dahulu untuk menghasilkan MLmodel, conda.yaml, model.pkl, dll.
+        import shutil
+        temp_model_dir = "temp_model_save"
+        if os.path.exists(temp_model_dir):
+            shutil.rmtree(temp_model_dir)
+
+        mlflow.sklearn.save_model(best_model, temp_model_dir)
+
+        # Log folder tersebut sebagai artifacts ke path "model" di DagsHub
+        mlflow.log_artifacts(temp_model_dir, artifact_path="model")
+
+        # Bersihkan folder temp lokal
+        shutil.rmtree(temp_model_dir)
         
         # 5. Pembuatan dan Logging Artefak Tambahan (Kriteria Advance)
         print("Membuat dan merekam artefak tambahan...")
